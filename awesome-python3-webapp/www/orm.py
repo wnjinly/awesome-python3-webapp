@@ -8,7 +8,7 @@ def log(sql,args=()):
 
 #数据库连接
 async def create_pool(loop,**kw):
-	logging.info('create database connection pool...')
+	# logging.info('create database connection pool...执行')
 	global __pool
 	__pool = await aiomysql.create_pool(
 		host = kw.get('host','localhost'),
@@ -22,6 +22,12 @@ async def create_pool(loop,**kw):
 		minsize = kw.get('minsize',1),
 		loop = loop
 	)
+	logging.info('create database connection pool...')
+# async def close_pool():
+# 	logging.info('close database connection pool...')
+# 	global __pool
+# 	__pool.close()
+# 	await __pool.wait_closed()
 
 #select
 async def execute(sql,args,size=None):
@@ -222,13 +228,13 @@ class Model(dict,metaclass=ModelMetaclass):
 		args.append(self.getValue(self.__primary_key__))
 		rows = await execute(self.__update__,args)
 		if rows != 1:
-			logging.warn('failed to update by primary key: affected rows:%s' % rows)
+			logging.warn('failed to update by primary key: affected rows: %s' % rows)
 
 	async def remove(self):
 		args = [self.getValue(self.__primary_key__)]
 		rows = await execute(self.__delete__,args)
 		if rows !=1:
-			logging.warn('failed to remove by primary key: affected rows:%s' % rows)
+			logging.warn('failed to remove by primary key: affected rows: %s' % rows)
 
 
 
