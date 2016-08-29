@@ -4,9 +4,14 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="2">
+          <list size="7">
             <item index="0" class="java.lang.String" itemvalue="v-on" />
             <item index="1" class="java.lang.String" itemvalue="v-model" />
+            <item index="2" class="java.lang.String" itemvalue="v-with" />
+            <item index="3" class="java.lang.String" itemvalue="v-component" />
+            <item index="4" class="java.lang.String" itemvalue="v-repeat" />
+            <item index="5" class="java.lang.String" itemvalue="v-attr" />
+            <item index="6" class="java.lang.String" itemvalue="v-text" />
           </list>
         </value>
       </option>

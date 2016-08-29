@@ -8,7 +8,7 @@ import markdown2
 from aiohttp import web
 
 from coroweb import get, post
-from apis import APIValueError, APIPermissionError
+from apis import Page, APIValueError, APIPermissionError
 
 from models import User, Comment, Blog, next_id
 from config import configs
@@ -91,6 +91,46 @@ def index(request):
     }
 
 
+@get('/register')
+def register():
+    return {
+        '__template__': 'register.html'
+    }
+
+
+@get('/signin')
+def signin():
+    return {
+        '__template__': 'signin.html'
+    }
+
+
+@get('/signout')
+def signout(request):
+    referer = request.headers.get('Referer')
+    r = web.HTTPFound(referer or '/')
+    r.set_cookie(COOKIE_NAME, '-deleted-', max_age=0, httponly=True)
+    logging.info('user signed out.')
+    return r
+
+
+@get('/manage/blogs/create')
+def manage_create_blog():
+    return {
+        '__template__': 'manage_blog_edit.html',
+        'id': '',
+        'action': '/api/blogs'
+    }
+
+
+@get('/manage/blogs')
+def manage_blogs(*, page='1'):
+    return {
+        '__template__': 'manage_blogs.html',
+        'page_index': get_page_index(page)
+    }
+
+
 @get('/blog/{id}')
 @asyncio.coroutine
 def get_blog(id):
@@ -107,18 +147,21 @@ def get_blog(id):
     }
 
 
-@get('/register')
-def register():
-    return {
-        '__template__': 'register.html'
-    }
+@get('/api/blogs')
+def api_blogs(*, page='1'):
+    page_index = get_page_index(page)
+    num = yield from Blog.findNumber('count(id)')
+    p = Page(num, page_index)
+    if num == 0:
+        return dict(page=p, blogs=())
+    blogs = yield from Blog.findAll(orderBy='created_at desc', limit=(p.offset, p.limit))
+    return dict(page=p, blogs=blogs)
 
 
-@get('/signin')
-def signin():
-    return {
-        '__template__': 'signin.html'
-    }
+@get('/api/blogs/{id}')
+def api_get_blog(*, id):
+    blog = yield from Blog.find(id)
+    return blog
 
 
 @post('/api/authenticate')
@@ -147,23 +190,6 @@ def authenticate(*, email, passwd):
     return r
 
 
-@get('/signout')
-def signout(request):
-    referer = request.headers.get('Referer')
-    r = web.HTTPFound(referer or '/')
-    r.set_cookie(COOKIE_NAME, '-deleted-', max_age=0, httponly=True)
-    logging.info('user signed out.')
-    return r
-
-
-@get('/manage/blogs/create')
-def manage_create_blog():
-    return {
-        '__template__': 'manage_blog_edit.html',
-        'id': '',
-        'action': '/api/blogs'
-    }
-
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_SHA1 = re.compile(r'^[0-9a-f]{40}$')
 
@@ -190,12 +216,6 @@ def api_register_user(*, email, name, passwd):
     r.content_type = 'application/json'
     r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')
     return r
-
-
-@get('/api/blogs/{id}')
-def api_get_blog(*, id):
-    blog = yield from Blog.find(id)
-    return blog
 
 
 @post('/api/blogs')
