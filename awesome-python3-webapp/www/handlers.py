@@ -295,7 +295,7 @@ def api_create_blog(request, *, name, summary, content):
 
 
 @post('/api/blogs/{id}')
-def api_update_blog(request, *, name, summary, content):
+def api_update_blog(id, request, *, name, summary, content):
     check_admin(request)
     blog = yield from Blog.find(id)
     if not name or not name.strip():
@@ -329,7 +329,7 @@ def api_create_comment(id, request, *, content):
         raise APIValueError('content')
     comment = Comment(blog_id=blog.id, user_id=user.id, user_name=user.name, user_image=user.image, content=content.strip())
     yield from comment.save()
-    return comment
+    return dict(id=id)
 
 
 @post('/api/comments/{id}/delete')
