@@ -60,6 +60,7 @@ async def execute(sql, args, autocommit=True):
             if not autocommit:
                 await conn.rollback()
             raise e
+        print('hhhhhhhh')
         return affected
 
 

@@ -90,8 +90,7 @@ def has_request_arg(fn):
             continue
         if found and (
                     param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
-            raise ValueError(
-                'request parameter must be the last named parameter in function: %s%s' % (fn.__name__, str(sig)))
+            raise ValueError('request parameter must be the last named parameter in function: %s%s' % (fn.__name__, str(sig)))
     return found
 
 
@@ -107,6 +106,7 @@ class RequestHandler(object):
 
     @asyncio.coroutine
     def __call__(self, request):
+        print(self)
         kw = None
         if self._has_var_kw_arg or self._has_named_kw_args or self._required_kw_args:
             if request.method == 'POST':
@@ -124,6 +124,7 @@ class RequestHandler(object):
                 else:
                     return web.HTTPBadRequest('Unsupported Content-Type: %s' % request.content_type)
             if request.method == 'GET':
+                print(request)
                 qs = request.query_string
                 if qs:
                     kw = dict()
