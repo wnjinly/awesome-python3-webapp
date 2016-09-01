@@ -42,29 +42,28 @@ def init_jinja2(app, **kw):
     app['__templating__'] = env
 
 
-async def logger_factory(app, handler):
+@asyncio.coroutine
+def logger_factory(app, handler):
     async def logger(request):
         logging.info('Request: %s %s' % (request.method, request.path))
         return await handler(request)
-
     return logger
 
 
 @asyncio.coroutine
 def anth_factory(app, handler):
-    @asyncio.coroutine
-    def auth(request):
+    async def auth(request):
         logging.info('check user: %s %s' % (request.method, request.path))
         request.__user__ = None
         cookie_str = request.cookies.get(COOKIE_NAME)
         if cookie_str:
-            user = yield from cookie2user(cookie_str)
+            user = await cookie2user(cookie_str)
             if user:
                 logging.info('set current user: %s' % user.email)
                 request.__user__ = user
             if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
                 return web.HTTPFound('/signin')
-        return (yield from handler(request))
+        return await handler(request)
     return auth
 
 
@@ -140,15 +139,16 @@ def datetime_filter(t):
     return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
 
 
-async def init(loop1):
-    await orm.create_pool(loop=loop1, host='127.0.0.1', port=3306, user='root', password='369958', db='awesome')
+@asyncio.coroutine
+def init(loop1):
+    yield from orm.create_pool(loop=loop1, host='127.0.0.1', port=3306, user='root', password='369958', db='awesome')
     app = web.Application(loop=loop1, middlewares=[
         logger_factory, anth_factory, response_factory
     ])
     init_jinja2(app, filters={'datetime': datetime_filter})
     add_routes(app, 'handlers')
     add_static(app)
-    srv = await loop1.create_server(app.make_handler(), '127.0.0.1', 9000)
+    srv = yield from loop1.create_server(app.make_handler(), '127.0.0.1', 9000)
     logging.info('server started at http://127.0.0.1:9000...')
     return srv
 
