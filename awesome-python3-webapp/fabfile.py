@@ -12,9 +12,9 @@ import os, re
 from datetime import datetime
 from fabric.api import *
 
-env.user = 'ubuntu'
+env.user = 'root'
 env.sudo_user = 'root'
-env.hosts = ['52.41.222.247']
+env.hosts = ['108.61.186.109']
 
 db_user = 'root'
 db_password = '369958'
@@ -62,19 +62,19 @@ def deploy():
     run('rm -f %s' % _REMOTE_TMP_TAR)
     put('dist/%s' % _TAR_FILE, _REMOTE_TMP_TAR)
     with cd(_REMOTE_BASE_DIR):
-        sudo('mkdir %s' % newdir)
+        run('mkdir %s' % newdir)
     with cd('%s/%s' % (_REMOTE_BASE_DIR, newdir)):
-        sudo('tar -xzvf %s' % _REMOTE_TMP_TAR)
+        run('tar -xzvf %s' % _REMOTE_TMP_TAR)
     with cd(_REMOTE_BASE_DIR):
-        sudo('rm -r www')
-        sudo('ln -s %s www' % newdir)
-        sudo('chown root: www')
-        sudo('chown -R root: %s' % newdir)
+        run('rm -r www')
+        run('ln -s %s www' % newdir)
+        run('chown root: www')
+        run('chown -R root: %s' % newdir)
     with settings(warn_only=True):
-        sudo('supervisorctl stop awesome')
-        sudo('supervisorctl start awesome')
-        sudo('/etc/init.d/nginx stop')
-        sudo('/etc/init.d/nginx start')
+        run('supervisorctl stop awesome')
+        run('supervisorctl start awesome')
+        run('/etc/init.d/nginx stop')
+        run('/etc/init.d/nginx start')
 
 RE_FILES = re.compile('\r?\n')
 
